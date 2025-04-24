@@ -1,91 +1,32 @@
-name: Run Selected Selenium Tests with Validation
-
+name: Run Selected Selenium Tests
+ 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
-
+  workflow_dispatch:  # manual trigger
+ 
 jobs:
-  run-selenium-tests:
+  run-tests:
     runs-on: ubuntu-latest
-
+ 
     steps:
-      - name: 🛒 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: ☕ Set up Java 17
+ 
+      - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: 🧪 Print Chrome version
+ 
+      - name: Print Chrome version
         run: google-chrome --version
-
-      - name: 🚀 Run Selenium Tests with Summary Extraction and Validation
+ 
+      - name: Run Selected Selenium Tests in headless mode
         env:
           GITHUB_ACTIONS: true
         run: |
-          echo "================ RUNNING TESTS ================="
+          echo "Running tests headlessly"
           CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
-
-          # Run all essential.* tests and capture output
-          mvn clean test -Dtest=essential.* | tee selenium-test-output.txt
-          mvn_exit=${PIPESTATUS[0]}
-
-          if [ "$mvn_exit" -ne 0 ]; then
-            echo "❌ Maven build failed with exit code $mvn_exit. Failing pipeline."
-            exit 1
-          fi
-
-          echo "================ FILTERING SUMMARY ================="
-          grep -E "LOGIN|LOGOUT|EMPLOYEE ONBOARDING|LEAVE MANAGEMENT|ADD DEPARTMENT AND DELETE DEPARTMENT|done successfully|completed|added successfully|deleted successfully|failed|successful|ERROR|WARNING" selenium-test-output.txt > test-summary.txt
-
-          echo "================ PARSING RESULTS ================="
-          summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1)
-          echo "Test Summary: $summary_line"
-
-          total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+')
-          failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+')
-          errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+')
-          skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+')
-          passed=$((total - failures - errors))
-
-          if [ "$total" -eq 0 ]; then
-            percent=0
-          else
-            percent=$((passed * 100 / total))
-          fi
-
-          # Create validation summary file
-          echo "📊 Total: $total, Passed: $passed, Failures: $failures, Errors: $errors, Skipped: $skipped, Passed %: $percent" > test-validation-summary.txt
-          if [ "$percent" -lt 80 ]; then
-            echo "❌ Test pass percentage ($percent%) is below threshold (80%). Failing the pipeline." >> test-validation-summary.txt
-            status="fail"
-          else
-            echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding." >> test-validation-summary.txt
-            status="pass"
-          fi
-
-          # Merge test-summary and validation into single file
-          echo "========== VALIDATION SUMMARY ==========" > combined-test-report.txt
-          cat test-validation-summary.txt >> combined-test-report.txt
-
-          echo -e "\n========== TEST EXECUTION SUMMARY ==========" >> combined-test-report.txt
-          cat test-summary.txt >> combined-test-report.txt
-
-          # Show raw output for debugging
-          echo -e "\n========== RAW SELENIUM OUTPUT (LAST 20 LINES) =========="
-          tail -n 20 selenium-test-output.txt
-
-          # Exit if failed
-          if [ "$status" = "fail" ]; then
-            exit 1
-          fi
-
-      - name: 📦 Upload Combined Test Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: combined-test-report
-          path: combined-test-report.txt
+          mvn clean test -Dtest=essential.LoginLogout,essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement
