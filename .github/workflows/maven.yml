@@ -55,7 +55,8 @@ jobs:
       # Step 4: Run Selected Selenium Tests in headless mode
       - name: Run Selected Selenium Tests in headless mode
         env:
-          JAVA_HOME: /opt/hostedtoolcache/jdk/17/  # Ensure JAVA_HOME points to Java 17 path
+          JAVA_HOME: /opt/hostedtoolcache/jdk/17/  # Explicitly set JAVA_HOME
+          PATH: $JAVA_HOME/bin:$PATH              # Ensure JAVA_HOME/bin is in PATH
         run: |
           set -e
           echo "Running tests headlessly"
