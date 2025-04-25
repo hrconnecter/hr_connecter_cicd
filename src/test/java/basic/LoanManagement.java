@@ -16,6 +16,7 @@ public class LoanManagement
 	public void preCondition() throws IOException
 	{   
 		System.out.println("<---Automation Script For Loan Management Start--->");
+		Thread.sleep(2000);
 		String browser = "chrome";
 		String url = "https://app.aegishrms.com/sign-in";
 				
