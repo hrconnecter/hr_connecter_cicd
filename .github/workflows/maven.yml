@@ -30,3 +30,19 @@ jobs:
           echo "Running tests headlessly"
           CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
           mvn clean test -Dtest=essential.LoginLogout,essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement
+
+
+          echo "================ PARSING RESULTS ================="
+          summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1)
+          echo "Test Summary: $summary_line"
+          total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+')
+          failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+')
+          errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+')
+          skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+')
+          passed=$((total - failures - errors))
+
+          if [ "$total" -eq 0 ]; then
+            percent=0
+          else
+            percent=$((passed * 100 / total))
+          fi
