@@ -47,22 +47,22 @@ jobs:
             percent=$((passed * 100 / total))
           fi
 
-          echo "========== VALIDATION SUMMARY ==========" > combined-test-report.txt
-          echo "📊 Total: $total, Passed: $passed, Failures: $failures, Errors: $errors, Skipped: $skipped, Passed %: $percent" >> combined-test-report.txt
+          echo "========== VALIDATION SUMMARY ==========" > test-report.txt
+          echo "📊 Total: $total, Passed: $passed, Failures: $failures, Errors: $errors, Skipped: $skipped, Passed %: $percent" >> test-report.txt
 
           if [ "$percent" -ge 80 ]; then
-            echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding." >> combined-test-report.txt
+            echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding." >> test-report.txt
             echo "pass" > test-status.txt
           else
-            echo "❌ Test pass percentage ($percent%) is below threshold (80%)." >> combined-test-report.txt
+            echo "❌ Test pass percentage ($percent%) is below threshold (80%)." >> test-report.txt
             echo "fail" > test-status.txt
           fi
 
-          echo "" >> combined-test-report.txt
-          echo "========== TEST EXECUTION SUMMARY ==========" >> combined-test-report.txt
-          tail -n 20 selenium-test-output.txt >> combined-test-report.txt
+          echo "" >> test-report.txt
+          echo "========== TEST EXECUTION SUMMARY ==========" >> test-report.txt
+          tail -n 20 selenium-test-output.txt >> test-report.txt
 
-      - name: 📦 Upload combined test report
+      - name: 📦 Upload test report
         uses: actions/upload-artifact@v4
         with:
           name: combined-test-report
