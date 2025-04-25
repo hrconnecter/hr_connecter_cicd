@@ -24,31 +24,19 @@ jobs:
       - name: Print Java version
         run: java -version
 
-      # Set up Docker and SonarQube
-      - name: Set up SonarQube using Docker
+      # Install Docker Compose
+      - name: Install Docker Compose
         run: |
-          echo "Setting up SonarQube..."
-          docker-compose -f docker-compose.yml up -d
-          
-      - name: Wait for SonarQube to start
-        run: |
-          echo "Waiting for SonarQube server to be healthy..."
-          for i in {1..30}; do
-            status=$(curl -s http://localhost:9000/api/system/health | jq -r .health)
-            if [ "$status" = "GREEN" ]; then
-              echo "SonarQube is ready."
-              break
-            fi
-            echo "Waiting... ($i)"
-            sleep 5
-          done
+          sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
 
-      # Set up SonarCloud (for SonarQube analysis)
+      # Set up SonarCloud
       - name: Set up SonarCloud
         uses: sonarsource/sonarcloud-github-action@v1
         with:
           entryPoint: "sonar-scanner"
-
+          
       - name: Run Selected Selenium Tests in headless mode
         env:
           JAVA_HOME: /opt/hostedtoolcache/jdk/17/ # Ensure JAVA_HOME points to Java 17 path
@@ -87,16 +75,6 @@ jobs:
           echo "" >> test-report.txt
           echo "========== TEST EXECUTION SUMMARY ==========" >> test-report.txt
           tail -n 20 selenium-test-output.txt >> test-report.txt
-
-      # Run SonarQube Analysis after Tests
-      - name: Run SonarQube Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          mvn clean verify sonar:sonar \
-            -Dsonar.projectKey=hrconnecter-cicd \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=$SONAR_TOKEN
 
       - name: 📦 Upload test report
         uses: actions/upload-artifact@v4
