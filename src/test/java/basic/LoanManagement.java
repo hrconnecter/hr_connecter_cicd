@@ -1,26 +1,21 @@
 package basic;
 import java.io.IOException;
 import java.time.Duration;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.edge.EdgeDriver;
-import org.openqa.selenium.edge.EdgeOptions;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import essential.BaseDriverSetup;
 public class LoanManagement                                                                            
 {    
 	public static WebDriver driver;	
 	@BeforeClass
 	public void preCondition() throws IOException
-	{   EdgeOptions options = new EdgeOptions();
-	options.addArguments("--no-sandbox");
-	options.addArguments("--disable-dev-shm-usage");
-	options.addArguments("--headless"); // Optional if running in headless env
-	options.addArguments("--user-data-dir=/tmp/edge-profile-" + System.currentTimeMillis());
-
-	WebDriver driver = new EdgeDriver(options);
+	{   
+	    driver=BaseDriverSetup.getDriver();
 		System.out.println("<---Automation Script For Loan Management Start--->");
 	//	String browser = "edge";
 		String url = "https://app.aegishrms.com/sign-in";
