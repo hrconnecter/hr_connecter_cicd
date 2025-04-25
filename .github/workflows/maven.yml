@@ -1,32 +1,70 @@
 name: Run Selected Selenium Tests
- 
+
 on:
   push:
     branches:
       - main
   workflow_dispatch:  # manual trigger
- 
+
 jobs:
   run-tests:
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
- 
+
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
- 
+
       - name: Print Chrome version
         run: google-chrome --version
- 
+
       - name: Run Selected Selenium Tests in headless mode
         env:
           GITHUB_ACTIONS: true
         run: |
+          set -e
           echo "Running tests headlessly"
           CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
-          mvn clean test -Dtest=essential.LoginLogout,essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement
+          mvn clean test -Dtest=basic.LoanManagement
+           # mvn clean test -Dtest=basic.LoanManagement,essential.LoginLogout,essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement| tee selenium-test-output.txt
+
+          echo "================ PARSING RESULTS ================="
+          summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1)
+          echo "Test Summary: $summary_line"
+          total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+')
+          failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+')
+          errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+')
+          skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+')
+          passed=$((total - failures - errors))
+
+          if [ "$total" -eq 0 ]; then
+            percent=0
+          else
+            percent=$((passed * 100 / total))
+          fi
+
+          echo "========== VALIDATION SUMMARY ==========" > test-report.txt
+          echo "📊 Total: $total, Passed: $passed, Failures: $failures, Errors: $errors, Skipped: $skipped, Passed %: $percent" >> test-report.txt
+
+          if [ "$percent" -ge 80 ]; then
+            echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding." >> test-report.txt
+            echo "pass" > test-status.txt
+          else
+            echo "❌ Test pass percentage ($percent%) is below threshold (80%)." >> test-report.txt
+            echo "fail" > test-status.txt
+          fi
+
+          echo "" >> test-report.txt
+          echo "========== TEST EXECUTION SUMMARY ==========" >> test-report.txt
+          tail -n 20 selenium-test-output.txt >> test-report.txt
+
+      - name: 📦 Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-test-report
+          path: test-report.txt

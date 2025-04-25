@@ -13,11 +13,19 @@ public class LoanManagement
 	public static WebDriver driver;
 	
 	@BeforeClass
+<<<<<<< HEAD
 	public void preCondition() throws IOException, InterruptedException
 	{   
 		System.out.println("<---Automation Script For Loan Management Start--->");
 		Thread.sleep(2000);
 		String browser = "edge";
+=======
+	public void preCondition() throws IOException InterruptedException
+	{   
+		System.out.println("<---Automation Script For Loan Management Start--->");
+		Thread.sleep(2000);
+		String browser = "chrome";
+>>>>>>> af8c6ed66c86856bae6cab0e77d5045ea374b280
 		String url = "https://app.aegishrms.com/sign-in";
 				
 		if(browser.equalsIgnoreCase("chrome"))
