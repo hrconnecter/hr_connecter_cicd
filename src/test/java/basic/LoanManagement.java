@@ -78,6 +78,7 @@ public class LoanManagement
 	{
 		Thread.sleep(2000);
 		driver.findElement(By.xpath("//button[text()='Go To Organisation']")).click();
+		System.out.println("<---Clicked on Organisation button --->");
 		Thread.sleep(2000);
 		driver.findElement(By.xpath("(//button[text()='Setup'])[2]")).click();
 		driver.findElement(By.xpath("//h1[text()='Loan Management']")).click();
