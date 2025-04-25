@@ -23,14 +23,12 @@ jobs:
       - name: Print Chrome version
         run: google-chrome --version
 
-      - name: Run Maven Build
-        run: mvn clean install
-
-      - name: SonarQube Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          mvn sonar:sonar -Dsonar.projectKey=hrconnecter_hr_connecter_cicd -Dsonar.host.url=https://sonarcloud.io
+      # Step to set up SonarCloud
+      - name: Set up SonarCloud
+        uses: sonarsource/sonarcloud-github-action@v1
+        with:
+          organization: hrconnecter  # Your SonarCloud organization
+          token: ${{ secrets.SONAR_TOKEN }}  # GitHub secret with your SonarCloud token
 
       - name: Run Selected Selenium Tests in headless mode
         env:
@@ -40,6 +38,7 @@ jobs:
           echo "Running tests headlessly"
           CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
           mvn clean test -Dtest=essential.AddDepartment
+           # mvn clean test -Dtest=basic.LoanManagement,essential.LoginLogout,essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement | tee selenium-test-output.txt
 
           echo "================ PARSING RESULTS ================="
           summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1)
