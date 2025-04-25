@@ -13,39 +13,43 @@ public class LoanManagement
 	public static WebDriver driver;
 	
 	@BeforeClass
-<<<<<<< HEAD
-	public void preCondition() throws IOException, InterruptedException
+	public void preCondition1() throws IOException, InterruptedException
 	{   
+
+	String url = "https://app.aegishrms.com/sign-in";
 		System.out.println("<---Automation Script For Loan Management Start--->");
 		Thread.sleep(2000);
-		String browser = "edge";
-=======
-	public void preCondition() throws IOException InterruptedException
-	{   
-		System.out.println("<---Automation Script For Loan Management Start--->");
-		Thread.sleep(2000);
-		String browser = "chrome";
->>>>>>> af8c6ed66c86856bae6cab0e77d5045ea374b280
-		String url = "https://app.aegishrms.com/sign-in";
-				
-		if(browser.equalsIgnoreCase("chrome"))
-		{
-			driver = new ChromeDriver();
-		}
-		else if(browser.equalsIgnoreCase("edge"))   
-		{
-			driver = new EdgeDriver();
-		}  
-		else   
-		{
-			driver = new ChromeDriver();
-		} 	
-		System.out.println("<-----Chrome Browser Is Launched------>");
+		driver = new ChromeDriver();
 		driver.manage().window().maximize();
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
 		driver.get(url);
-		System.out.println("<--- Web Application URL Is Entered--->");	
+		System.out.println("<--- Web Application URL Is Entered--->");
 	}
+//	public void preCondition() throws IOException ,InterruptedException
+//	{   
+//		System.out.println("<---Automation Script For Loan Management Start--->");
+//		Thread.sleep(2000);
+//		String browser = "chrome";
+//		String url = "https://app.aegishrms.com/sign-in";
+//				
+//		if(browser.equalsIgnoreCase("chrome"))
+//		{
+//			driver = new ChromeDriver();
+//		}
+//		else if(browser.equalsIgnoreCase("edge"))   
+//		{
+//			driver = new EdgeDriver();
+//		}  
+//		else   
+//		{
+//			driver = new ChromeDriver();
+//		} 	
+//		System.out.println("<-----Chrome Browser Is Launched------>");
+//		driver.manage().window().maximize();
+//		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
+//		driver.get(url);
+//		System.out.println("<--- Web Application URL Is Entered--->");	
+//	}
 	
 	@Test
 	public void basicOrganisationLoanManagement() throws InterruptedException
