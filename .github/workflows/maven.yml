@@ -43,14 +43,13 @@ jobs:
           
       - name: Run Selected Selenium Tests in headless mode
         env:
-          JAVA_HOME: /opt/hostedtoolcache/jdk/17/  # Ensure JAVA_HOME points to Java 17 path
-          PATH: $JAVA_HOME/bin:$PATH              # Ensure JAVA_HOME/bin is in PATH
+          GITHUB_ACTIONS: true
         run: |
           set -e
           echo "Running tests headlessly"
-          CHROME_ARGS="--headless --no-sandbox --disable-dev-shm-usage --window-size=1920x1080"
+          CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
           mvn clean test -Dtest=essential.AddDepartment
-          
+
           echo "================ PARSING RESULTS ================="
           summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1)
           echo "Test Summary: $summary_line"
@@ -81,7 +80,6 @@ jobs:
           echo "========== TEST EXECUTION SUMMARY ==========" >> test-report.txt
           tail -n 20 selenium-test-output.txt >> test-report.txt
 
-      # Upload test report as an artifact
       - name: 📦 Upload test report
         uses: actions/upload-artifact@v4
         with:
