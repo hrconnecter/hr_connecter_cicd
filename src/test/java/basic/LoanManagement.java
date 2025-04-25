@@ -4,6 +4,9 @@ import java.time.Duration;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -80,7 +83,11 @@ public class LoanManagement
 		driver.findElement(By.xpath("//button[text()='Go To Organisation']")).click();
 		System.out.println("<---Clicked on Organisation button --->");
 		Thread.sleep(2000);
-		driver.findElement(By.xpath("(//button[text()='Setup'])[2]")).click();
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+		WebElement setupBtn = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("(//button[text()='Setup'])[2]")));
+		setupBtn.click();
+
+	//	driver.findElement(By.xpath("(//button[text()='Setup'])[2]")).click();
 		driver.findElement(By.xpath("//h1[text()='Loan Management']")).click();
 		driver.findElement(By.xpath("//button[text()='Add Loan Type']")).click();
 		driver.findElement(By.name("loanName")).sendKeys(loanName);
