@@ -13,7 +13,7 @@ public class LoanManagement
 	public static WebDriver driver;
 	
 	@BeforeClass
-	public void preCondition() throws IOException
+	public void preCondition() throws IOException InterruptedException
 	{   
 		System.out.println("<---Automation Script For Loan Management Start--->");
 		Thread.sleep(2000);
