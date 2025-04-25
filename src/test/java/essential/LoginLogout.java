@@ -49,7 +49,7 @@ public class LoginLogout {
  
             // Navigate to Organisation
 
-            driver.findElement(By.xpath("//button[text()='Go To Organisatio']")).click();
+            driver.findElement(By.xpath("//button[text()='Go To Organisation']")).click();
 
             driver.findElement(By.xpath("(//button[text()='Setup'])[1]")).click();
  
