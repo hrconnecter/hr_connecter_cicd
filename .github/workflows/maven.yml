@@ -66,4 +66,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: combined-test-report
-          path: combined-test-report.txt
+          path: test-report.txt
