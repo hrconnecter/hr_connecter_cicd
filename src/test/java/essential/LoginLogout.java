@@ -29,7 +29,7 @@ public class LoginLogout {
         System.out.println("Admin Login done successfully");
 
         // Navigate to Organisation
-        driver.findElement(By.xpath("//button[text()='Go To Organisatio']")).click();
+        driver.findElement(By.xpath("//button[text()='Go To Organisation']")).click();
         driver.findElement(By.xpath("(//button[text()='Setup'])[1]")).click();
 
         logout();
