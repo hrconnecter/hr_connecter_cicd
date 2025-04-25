@@ -1,4 +1,4 @@
-name: Run Selenium Tests with SonarQube in Docker
+name: Build and Analyze with SonarQube
 
 on:
   push:
@@ -33,55 +33,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker
+      - name: Set up SonarQube
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          sudo systemctl start docker
-          sudo systemctl enable docker
+          echo "Running SonarQube analysis"
+          mvn sonar:sonar \
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      - name: Run SonarQube container
+      # Output the SonarQube URL
+      - name: SonarQube Dashboard URL
         run: |
-          echo "Starting SonarQube container"
-          docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
-
-      - name: Wait for SonarQube to be ready
-        run: |
-          echo "Waiting for SonarQube to start"
-          while ! curl -s http://localhost:9000 | grep -q "SonarQube"; do
-            echo "Waiting for SonarQube to be ready..."
-            sleep 10
-          done
-
-      - name: Install SonarQube Scanner
-        run: |
-          echo "Installing SonarQube scanner"
-          wget https://github.com/SonarSource/sonar-scanner-cli/releases/download/4.6.2.2472/sonar-scanner-cli-4.6.2.2472-linux.zip
-          unzip sonar-scanner-cli-4.6.2.2472-linux.zip
-          export PATH=$PWD/sonar-scanner-4.6.2.2472-linux/bin:$PATH
-
-      - name: Run SonarQube scan
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          echo "Running SonarQube scan"
-          sonar-scanner \
-            -Dsonar.projectKey=my-java-app \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=$SONAR_TOKEN
-
-      - name: Stop and remove SonarQube container
-        run: |
-          echo "Stopping SonarQube container"
-          docker stop sonarqube
-          docker rm sonarqube
-
-  selenium-testing:
-    needs: sonarqube-setup
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Java
+          echo "SonarQube analysis completed."
+          echo "You can view the results at: ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }}"
