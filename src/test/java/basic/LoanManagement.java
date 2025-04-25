@@ -5,6 +5,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -13,22 +14,28 @@ public class LoanManagement
 	public static WebDriver driver;	
 	@BeforeClass
 	public void preCondition() throws IOException
-	{   
+	{   EdgeOptions options = new EdgeOptions();
+	options.addArguments("--no-sandbox");
+	options.addArguments("--disable-dev-shm-usage");
+	options.addArguments("--headless"); // Optional if running in headless env
+	options.addArguments("--user-data-dir=/tmp/edge-profile-" + System.currentTimeMillis());
+
+	WebDriver driver = new EdgeDriver(options);
 		System.out.println("<---Automation Script For Loan Management Start--->");
-		String browser = "edge";
+	//	String browser = "edge";
 		String url = "https://app.aegishrms.com/sign-in";
-		if(browser.equalsIgnoreCase("chrome"))
-		{
-			driver = new ChromeDriver();
-		}
-		else if(browser.equalsIgnoreCase("edge"))   
-		{
-			driver = new EdgeDriver();
-		}  
-		else   
-		{
-			driver = new ChromeDriver();
-		} 	
+//		if(browser.equalsIgnoreCase("chrome"))
+//		{
+//			driver = new ChromeDriver();
+//		}
+//		else if(browser.equalsIgnoreCase("edge"))   
+//		{
+//			driver = new EdgeDriver();
+//		}  
+//		else   
+//		{
+//			driver = new ChromeDriver();
+//		} 	
 		System.out.println("<-----Chrome Browser Is Launched------>");
 		driver.manage().window().maximize();
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
