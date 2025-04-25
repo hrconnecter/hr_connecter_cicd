@@ -1,53 +1,91 @@
-name: SonarQube Analysis
+name: Run Selenium Tests with SonarQube in Docker
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches:
+      - main
+  workflow_dispatch:  # manual trigger
 
 jobs:
-  sonarqube:
+  build:
     runs-on: ubuntu-latest
-
-    services:
-      sonar:
-        image: sonarqube:10.4-community
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd="curl --silent --fail http://localhost:9000/api/system/ping || exit 1"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
+      - name: Set up Java
+        uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Set up Maven
-        uses: s4u/setup-maven-action@v1
-        with:
-          maven-version: '3.8.7'
+      - name: Build Project
+        run: |
+          echo "Building the project with Maven"
+          mvn clean install # This will generate the build artifact (e.g., JAR/WAR)
+
+  sonarqube-setup:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
+
+      - name: Run SonarQube container
+        run: |
+          echo "Starting SonarQube container"
+          docker run -d --name sonarqube -p 9000:9000 sonarqube:latest
 
       - name: Wait for SonarQube to be ready
         run: |
-          echo "Waiting for SonarQube to be healthy..."
-          for i in {1..30}; do
-            if curl -s http://localhost:9000/api/system/health | grep -q '"status":"UP"'; then
-              echo "SonarQube is up!"
-              break
-            fi
-            sleep 5
-          done
+          echo "Waiting for SonarQube to start"
+          sleep 60  # Give SonarQube enough time to start up
 
-      - name: Run SonarQube Analysis
+      - name: Install SonarQube Scanner
         run: |
-          mvn clean verify sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.login=$SONAR_TOKEN
+          echo "Installing SonarQube scanner"
+          wget https://github.com/SonarSource/sonar-scanner-cli/releases/download/4.6.2.2472/sonar-scanner-cli-4.6.2.2472-linux.zip
+          unzip sonar-scanner-cli-4.6.2.2472-linux.zip
+          export PATH=$PWD/sonar-scanner-4.6.2.2472-linux/bin:$PATH
+
+      - name: Run SonarQube scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          echo "Running SonarQube scan"
+          sonar-scanner \
+            -Dsonar.projectKey=my-java-app \
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.login=$SONAR_TOKEN
+
+      - name: Stop and remove SonarQube container
+        run: |
+          echo "Stopping SonarQube container"
+          docker stop sonarqube
+          docker rm sonarqube
+
+  selenium-testing:
+    needs: sonarqube-setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Print Chrome version
+        run: google-chrome --version
