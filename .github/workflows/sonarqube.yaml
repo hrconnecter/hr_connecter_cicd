@@ -3,32 +3,33 @@ name: CI/CD Pipeline with SonarQube Analysis
 on:
   push:
     branches:
-      - main  # Trigger analysis on push to the 'main' branch
+      - main
   pull_request:
     branches:
-      - main  # Trigger analysis for pull requests targeting 'main'
+      - main
 
 jobs:
   sonar:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        
+
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
           java-version: '11'
-        
+
       - name: Cache SonarQube Scanner dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3  # Ensure you have the correct version
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar-${{ hashFiles('**/*.java') }}
-        
+
       - name: Run SonarQube Analysis
         uses: SonarSource/sonarcloud-github-action@v2.1
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # Set this secret in GitHub Settings
-          SONAR_HOST_URL: 'http://localhost:9000'  # If using local SonarQube Docker container
-          SONAR_PROJECT_KEY: 'your_project_key'
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: 'http://localhost:9000'
+          SONAR_PROJECT_KEY: 'hr_connecter_cicd'
