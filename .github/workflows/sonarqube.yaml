@@ -7,11 +7,20 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:  # Added manual trigger
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   sonar:
     runs-on: ubuntu-latest
+
+    services:
+      sonarqube:
+        image: sonarqube:latest  # Use the latest SonarQube Docker image
+        options: >-
+          --name sonarqube
+          -p 9000:9000
+        ports:
+          - 9000:9000
 
     steps:
       - name: Checkout code
@@ -21,17 +30,29 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '11'
-          distribution: 'adoptopenjdk'  # You can use other distributions like 'zulu', 'oracle', etc.
+          distribution: 'adoptopenjdk'  # or another distribution
 
-      - name: Cache SonarQube Scanner dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar-${{ hashFiles('**/*.java') }}
+      - name: Wait for SonarQube to be ready
+        run: |
+          # Wait for SonarQube to be up and running on port 9000
+          for i in {1..30}; do
+            curl -s http://localhost:9000/api/system/ping && break || echo "Waiting for SonarQube to be ready..." && sleep 10
+          done
 
-      - name: Run SonarQube Analysis
-        uses: SonarSource/sonarcloud-github-action@v2.1
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: 'http://localhost:9000'
-          SONAR_PROJECT_KEY: 'hr_connecter_cicd'
+      - name: Install SonarQube Scanner
+        run: |
+          curl -sSLo sonarscanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
+          unzip sonar-scanner-cli-4.6.2.2472-linux.zip
+          export PATH=$PWD/sonar-scanner-4.6.2.2472-linux/bin:$PATH
+
+      - name: Run SonarQube analysis
+        run: |
+          sonar-scanner \
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.projectKey=your_project_key
+
+      - name: Stop SonarQube container
+        run: |
+          docker stop sonarqube
+          docker rm sonarqube
