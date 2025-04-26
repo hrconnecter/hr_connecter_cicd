@@ -18,9 +18,9 @@ jobs:
         image: sonarqube:latest  # Use the latest SonarQube Docker image
         options: >-
           --name sonarqube
-          -p 9000:9000
+          -p 9001:9000  # Change the port to 9001 to avoid conflicts
         ports:
-          - 9000:9000
+          - 9001:9000  # Map the container's internal 9000 port to 9001 on the host
 
     steps:
       - name: Checkout code
@@ -34,9 +34,9 @@ jobs:
 
       - name: Wait for SonarQube to be ready
         run: |
-          # Wait for SonarQube to be up and running on port 9000
+          # Wait for SonarQube to be up and running on port 9001
           for i in {1..30}; do
-            curl -s http://localhost:9000/api/system/ping && break || echo "Waiting for SonarQube to be ready..." && sleep 10
+            curl -s http://localhost:9001/api/system/ping && break || echo "Waiting for SonarQube to be ready..." && sleep 10
           done
 
       - name: Install SonarQube Scanner
@@ -48,9 +48,9 @@ jobs:
       - name: Run SonarQube analysis
         run: |
           sonar-scanner \
-            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.host.url=http://localhost:9001 \  # Updated to use new port
             -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.projectKey=your_project_key
+            -Dsonar.projectKey=hr_connecter_cicd
 
       - name: Stop SonarQube container
         run: |
