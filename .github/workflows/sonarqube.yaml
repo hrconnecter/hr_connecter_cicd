@@ -17,10 +17,10 @@ jobs:
       sonarqube:
         image: sonarqube:latest  # Use the latest SonarQube Docker image
         options: >-
-          --name sonarqube
-          -p 9001:9000  # Corrected port mapping
+          --name sonarqube  # Correctly set the container name
+          -p 9001:9000     # Map port 9001 on host to port 9000 on the container
         ports:
-          - 9001:9000  # Container port 9000 mapped to host port 9001
+          - 9001:9000      # Expose the container port 9000 as host port 9001
 
     steps:
       - name: Checkout code
