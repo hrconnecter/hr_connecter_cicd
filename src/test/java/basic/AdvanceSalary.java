@@ -20,6 +20,8 @@ import org.testng.annotations.BeforeClass;
 
 import org.testng.annotations.Test;
 
+import essential.BaseDriverSetup;
+
 public class AdvanceSalary
 
 {
@@ -34,43 +36,28 @@ public class AdvanceSalary
 
 		System.out.println("<---Automation Script For Advance Salary Start--->");
 
-		String browser = "edge";
-
-		String url = "https://qa.aegishrms.com/sign-in";
-
-		if(browser.equalsIgnoreCase("chrome"))
-
-		{
-
-			driver = new ChromeDriver();
-
-		}
-
-		else if(browser.equalsIgnoreCase("edge"))   
-
-		{
-
-			driver = new EdgeDriver();
-
-		}  
-
-		else   
-
-		{
-
-			driver = new ChromeDriver();
-
-		} 	
-
+	    driver=BaseDriverSetup.getDriver();
+		System.out.println("<---Automation Script For Loan Management Start--->");
+	//	String browser = "edge";
+		String url = "https://app.aegishrms.com/sign-in";
+//		if(browser.equalsIgnoreCase("chrome"))
+//		{
+//			driver = new ChromeDriver();
+//		}
+//		else if(browser.equalsIgnoreCase("edge"))   
+//		{
+//			driver = new EdgeDriver();
+//		}  
+//		else   
+//		{
+//			driver = new ChromeDriver();
+//		} 	
 		System.out.println("<-----Chrome Browser Is Launched------>");
-
 		driver.manage().window().maximize();
-
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
-
 		driver.get(url);
+		System.out.println("<--- Web Application URL Is Entered--->");
 
-		System.out.println("<--- Web Application URL Is Entered--->");	
 
 	}
 
