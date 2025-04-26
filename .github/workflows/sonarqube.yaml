@@ -1,34 +1,117 @@
-name: SonarQube CI
+name: Run Selected Selenium Tests with SonarQube Scan
 
 on:
-  workflow_dispatch:  # manual trigger only
+  workflow_dispatch:  # Manual trigger
 
 jobs:
-  sonarqube:
+  build-and-scan:
     runs-on: ubuntu-latest
-
-    services:
-      sonarqube:
-        image: sonarqube
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd="curl -f http://localhost:9000/api/system/status" 
-          --health-interval=10s 
-          --health-timeout=5s 
-          --health-retries=5
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build Project with Maven
+        run: |
+          echo "🔨 Building project with Maven"
+          mvn clean install
+
+      - name: Start SonarQube Server (Docker)
+        run: |
+          echo "🚀 Starting SonarQube in Docker"
+          docker run -d --name sonarqube-custom -p 9000:9000 sonarqube:10.6-community
 
       - name: Wait for SonarQube to be ready
         run: |
+          echo "⏳ Waiting for SonarQube to start..."
           for i in {1..30}; do
-            curl -f http://localhost:9000/api/system/status && break || sleep 10
+            if curl -s http://localhost:9000/api/system/health | grep -q '"status":"UP"'; then
+              echo "✅ SonarQube is UP!"
+              break
+            fi
+            sleep 5
           done
 
-      - name: Run SonarQube Scanner
+      - name: Install Sonar Scanner
         run: |
-          # Replace with your SonarQube scanner command
-          sonar-scanner -Dsonar.projectKey=hr_connecter_cicd -Dsonar.host.url=http://localhost:9000 -Dsonar.login=my_token
+          echo "🔧 Installing SonarScanner"
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner.zip
+          sudo mv sonar-scanner-*/ /opt/sonar-scanner
+          sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
+
+      - name: Run Sonar Scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # You should create this secret in GitHub repo settings
+        run: |
+          echo "🔍 Running SonarQube Scan"
+          sonar-scanner \
+            -Dsonar.projectKey=my-project \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.login=$SONAR_TOKEN
+
+  selenium-testing:
+    needs: build-and-scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Google Chrome
+        run: |
+          sudo apt update
+          sudo apt install -y google-chrome-stable || true
+
+      - name: Check Chrome Version
+        run: google-chrome --version
+
+      - name: Run Selected Selenium Tests
+        env:
+          GITHUB_ACTIONS: true
+        run: |
+          echo "🚀 Running selected Selenium tests headlessly"
+          CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
+          mvn clean test -Dtest=basic.AdvanceSalary | tee selenium-test-output.txt
+
+          echo "================ PARSING RESULTS ================="
+          summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1 || echo "No test summary found.")
+          echo "Test Summary: $summary_line"
+
+          total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+' || echo 0)
+          failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+' || echo 0)
+          errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+' || echo 0)
+          skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+' || echo 0)
+          passed=$((total - failures - errors))
+
+          if [ "$total" -eq 0 ]; then
+            percent=0
+          else
+            percent=$((passed * 100 / total))
+          fi
+
+          echo "========== VALIDATION SUMMARY ==========" > combined-test-report.txt
+          echo "📊 Total: $total, Passed: $passed, Failures: $failures, Errors: $errors, Skipped: $skipped, Passed %: $percent" >> combined-test-report.txt
+
+          if [ "$percent" -ge 80 ]; then
+            echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding." >> combined-test-report.txt
+          else
+            echo "❌ Test pass percentage ($percent%) is below threshold (80%). Failing workflow." >> combined-test-report.txt
+            cat combined-test-report.txt
+            exit 1
+          fi
