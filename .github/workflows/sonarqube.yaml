@@ -1,7 +1,7 @@
 name: Build and Analyze with SonarQube
 
 on:
-  workflow_dispatch:  # Only trigger manually
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   build:
@@ -58,7 +58,35 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      - name: 🔗 SonarQube Dashboard URL
+      - name: ⏱️ Wait for SonarQube analysis to complete
+        run: sleep 20
+
+      - name: ✅ Check SonarQube Quality Gate
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          echo "SonarQube analysis completed."
-          echo "🔗 Results: ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }}"
+          echo "Checking SonarQube Quality Gate status..."
+          projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          analysisId=$(curl -s -u "$SONAR_TOKEN:" "${{ secrets.SONAR_HOST_URL }}/api/ce/component?component=$projectKey" | jq -r '.queue[0].id')
+          status="PENDING"
+          for i in {1..10}; do
+            status=$(curl -s -u "$SONAR_TOKEN:" "${{ secrets.SONAR_HOST_URL }}/api/ce/task?id=$analysisId" | jq -r '.task.status')
+            echo "Status: $status"
+            if [ "$status" == "SUCCESS" ]; then
+              break
+            fi
+            sleep 10
+          done
+
+          qualityStatus=$(curl -s -u "$SONAR_TOKEN:" "${{ secrets.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=$projectKey" | jq -r '.projectStatus.status')
+
+          echo "Quality Gate Status: $qualityStatus"
+          if [ "$qualityStatus" != "OK" ]; then
+            echo "❌ Quality Gate failed"
+            exit 1
+          else
+            echo "✅ Quality Gate passed"
+          fi
+
+      - name: 🔗 SonarQube Dashboard URL
+        run: echo "View results: ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }}"
