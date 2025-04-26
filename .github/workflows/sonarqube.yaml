@@ -14,11 +14,13 @@ jobs:
           curl -fsSL https://get.docker.com -o get-docker.sh
           sudo sh get-docker.sh
 
-      # Step 2: Install Ngrok (for exposing local service to the internet)
+      # Step 2: Install ngrok (for exposing local service to the internet)
       - name: Install ngrok
         run: |
-          curl -s https://ngrok.com/download | tar xz
+          wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+          unzip ngrok-stable-linux-amd64.zip
           sudo mv ngrok /usr/local/bin
+          rm ngrok-stable-linux-amd64.zip
 
       # Step 3: Run SonarQube Server in Docker
       - name: Run SonarQube Server
@@ -44,7 +46,6 @@ jobs:
       - name: Output SonarQube URL
         run: |
           echo "SonarQube can be accessed at: ${{ env.SONARQUBE_URL }}"
-
 
 
 
