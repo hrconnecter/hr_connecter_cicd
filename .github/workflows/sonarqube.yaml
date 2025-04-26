@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:  # Added manual trigger
 
 jobs:
   sonar:
@@ -20,9 +21,10 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '11'
+          distribution: 'adoptopenjdk'  # You can use other distributions like 'zulu', 'oracle', etc.
 
       - name: Cache SonarQube Scanner dependencies
-        uses: actions/cache@v3  # Ensure you have the correct version
+        uses: actions/cache@v3
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar-${{ hashFiles('**/*.java') }}
