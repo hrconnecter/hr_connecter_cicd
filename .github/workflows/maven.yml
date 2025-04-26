@@ -1,9 +1,7 @@
 name: Run Selected Selenium Tests
 
 on:
-    branches:
-      - main
-  workflow_dispatch:  # manual trigger
+  workflow_dispatch:  # manual trigger only
 
 jobs:
   build:
@@ -22,7 +20,7 @@ jobs:
       - name: Build Project
         run: |
           echo "Building the project with Maven"
-          mvn clean install # This will generate the build artifact (e.g., JAR/WAR)
+          mvn clean install
 
   selenium-testing:
     needs: build
@@ -38,6 +36,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Install Chrome
+        run: |
+          sudo apt update
+          sudo apt install -y google-chrome-stable || true
+
       - name: Print Chrome version
         run: google-chrome --version
 
@@ -50,12 +53,13 @@ jobs:
           mvn clean test -Dtest=essential.LoginLogout,essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement | tee selenium-test-output.txt
 
           echo "================ PARSING RESULTS ================="
-          summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1)
+          summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1 || echo "No test summary found.")
           echo "Test Summary: $summary_line"
-          total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+')
-          failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+')
-          errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+')
-          skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+')
+          
+          total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+' || echo 0)
+          failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+' || echo 0)
+          errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+' || echo 0)
+          skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+' || echo 0)
           passed=$((total - failures - errors))
 
           if [ "$total" -eq 0 ]; then
@@ -69,18 +73,9 @@ jobs:
 
           if [ "$percent" -ge 80 ]; then
             echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding." >> combined-test-report.txt
-            echo "pass" > test-status.txt
           else
-            echo "❌ Test pass percentage ($percent%) is below threshold (80%)." >> combined-test-report.txt
-            echo "fail" > test-status.txt
+            echo "❌ Test pass percentage ($percent%) is below threshold (80%). Failing workflow." >> combined-test-report.txt
+            exit 1
           fi
 
-          echo "" >> combined-test-report.txt
-          echo "========== TEST EXECUTION SUMMARY ==========" >> combined-test-report.txt
-          tail -n 20 selenium-test-output.txt >> combined-test-report.txt
-
-      - name: 📦 Upload combined test report
-        uses: actions/upload-artifact@v4
-        with:
-          name: combined-test-report
-          path: combined-test-report.txt
+          echo "" >> combined-test-report
