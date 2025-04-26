@@ -7,6 +7,15 @@ jobs:
   sonar:
     runs-on: ubuntu-latest
 
+    services:
+      sonarqube:
+        image: sonarqube:9.9-community  # Use a specific version of SonarQube
+        options: >-
+          --name sonarqube  # Correctly set the container name
+          -p 9001:9000      # Map port 9001 on host to port 9000 on the container
+        ports:
+          - 9001:9000       # Expose the container port 9000 as host port 9001
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -16,24 +25,6 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'  # Use temurin instead of adoptopenjdk
-
-      - name: Build Docker Image
-        run: |
-          docker build -t rahulvarne/my-sonarqube-image .
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}  # Your Docker Hub username
-          password: ${{ secrets.DOCKER_PASSWORD }}  # Your Docker Hub password or access token
-
-      - name: Push Docker Image to Docker Hub
-        run: |
-          docker push rahulvarne/my-sonarqube-image
-
-      - name: Run SonarQube Container
-        run: |
-          docker run -d --name sonar -p 9001:9000 rahulvarne/my-sonarqube-image
 
       - name: Wait for SonarQube to be ready
         run: |
@@ -56,5 +47,5 @@ jobs:
 
       - name: Stop SonarQube container
         run: |
-          docker stop sonar
-          docker rm sonar
+          docker stop sonarqube
+          docker rm sonarqube
