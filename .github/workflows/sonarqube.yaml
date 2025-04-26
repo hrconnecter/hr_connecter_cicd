@@ -1,12 +1,12 @@
-name: Deploy SonarQube Server
-
-on:
-  workflow_dispatch:
-
 jobs:
   deploy-sonarqube:
     runs-on: ubuntu-latest
     steps:
+      - name: Uninstall conflicting containerd
+        run: |
+          sudo apt-get remove -y containerd
+          sudo apt-get autoremove -y
+
       - name: Install Docker
         run: |
           sudo apt update
@@ -15,7 +15,7 @@ jobs:
       - name: Run SonarQube Server
         run: |
           docker run -d --name sonarqube-server -p 9000:9000 sonarqube:10.6-community
-          
+
       - name: Wait and Health Check
         run: |
           sleep 60
