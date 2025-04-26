@@ -18,9 +18,9 @@ jobs:
         image: sonarqube:latest  # Use the latest SonarQube Docker image
         options: >-
           --name sonarqube
-          -p 9001:9000  # Change the port to 9001 to avoid conflicts
+          -p 9001:9000  # Corrected port mapping
         ports:
-          - 9001:9000  # Map the container's internal 9000 port to 9001 on the host
+          - 9001:9000  # Container port 9000 mapped to host port 9001
 
     steps:
       - name: Checkout code
@@ -48,9 +48,9 @@ jobs:
       - name: Run SonarQube analysis
         run: |
           sonar-scanner \
-            -Dsonar.host.url=http://localhost:9001 \  # Updated to use new port
+            -Dsonar.host.url=http://localhost:9001 \
             -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.projectKey=hr_connecter_cicd
+            -Dsonar.projectKey=your_project_key
 
       - name: Stop SonarQube container
         run: |
