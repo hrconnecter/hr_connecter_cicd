@@ -15,12 +15,12 @@ jobs:
 
     services:
       sonarqube:
-        image: sonarqube:community  # Changed base image to community edition
+        image: sonarqube:9.8-community  # Changed to a different version of SonarQube
         options: >-
           --name sonarqube
-          -p 9001:9000
+          -p 9001:9000  # Map port 9001 on host to port 9000 on the container
         ports:
-          - 9001:9000
+          - 9001:9000  # Expose the container port 9000 as host port 9001
 
     steps:
       - name: Checkout code
@@ -30,12 +30,13 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '11'
-          distribution: 'adoptopenjdk'
+          distribution: 'adoptopenjdk'  # or another distribution
 
       - name: Wait for SonarQube to be ready
         run: |
-          for i in {1..30}; do
-            curl -s http://localhost:9001/api/system/ping && break || echo "Waiting for SonarQube..." && sleep 10
+          # Wait for SonarQube to be up and running on port 9001
+          for i in {1..60}; do  # Increased wait time from 30 to 60
+            curl -s http://localhost:9001/api/system/ping && break || echo "Waiting for SonarQube to be ready..." && sleep 10
           done
 
       - name: Install SonarQube Scanner
@@ -46,7 +47,7 @@ jobs:
 
       - name: Run SonarQube analysis
         run: |
-          ./sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner \
+          sonar-scanner \
             -Dsonar.host.url=http://localhost:9001 \
             -Dsonar.login=$SONAR_TOKEN \
             -Dsonar.projectKey=your_project_key
