@@ -89,4 +89,5 @@ jobs:
           fi
 
       - name: 🔗 SonarQube Dashboard URL
-        run: echo "View results: ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }}"
+        run: |
+          echo "View results: ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }}"
