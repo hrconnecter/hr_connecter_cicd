@@ -1,44 +1,64 @@
 name: Build and Analyze with SonarQube
 
 on:
-  workflow_dispatch:  # manual trigger only
+  workflow_dispatch:  # Only trigger manually
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 🔄 Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Java
+      - name: ☕ Set up Java 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build Project
-        run: |
-          echo "Building the project with Maven"
-          mvn clean install
+      - name: 💾 Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
-  sonarqube-setup:
+      - name: ⚙️ Build project with Maven
+        run: mvn clean install
+
+  sonarqube-analysis:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 🔄 Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up SonarQube
+      - name: ☕ Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 💾 Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: 🔍 Run SonarQube analysis
         run: |
-          echo "Running SonarQube analysis"
-          mvn sonar:sonar \
+          echo "Running SonarQube analysis..."
+          mvn verify sonar:sonar \
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      - name: SonarQube Dashboard URL
+      - name: 🔗 SonarQube Dashboard URL
         run: |
           echo "SonarQube analysis completed."
-          echo "You can view the results at: ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }}"
+          echo "🔗 Results: ${{ secrets.SONAR_HOST_URL }}/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }}"
