@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y \
 # Download and install SonarQube
 RUN mkdir -p $SONARQUBE_HOME && \
     curl -L "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-$SONARQUBE_VERSION.zip" -o sonarqube.zip && \
-    if [ $? -ne 0 ]; then echo "Download failed"; exit 1; fi && \
     unzip sonarqube.zip -d $SONARQUBE_HOME && \
     rm sonarqube.zip && \
     mv $SONARQUBE_HOME/sonarqube-$SONARQUBE_VERSION/* $SONARQUBE_HOME && \
