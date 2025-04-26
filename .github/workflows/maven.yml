@@ -1,7 +1,6 @@
 name: Run Selected Selenium Tests
 
 on:
-  push:
     branches:
       - main
   workflow_dispatch:  # manual trigger
