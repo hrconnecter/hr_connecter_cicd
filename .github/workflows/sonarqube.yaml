@@ -1,3 +1,8 @@
+name: Deploy SonarQube
+
+on:
+  workflow_dispatch:    # <-- Manual trigger (button in GitHub UI)
+
 jobs:
   deploy-sonarqube:
     runs-on: ubuntu-latest
@@ -20,6 +25,7 @@ jobs:
         run: |
           sleep 60
           curl -s http://localhost:9000 | grep -q "SonarQube"
+
 
 
 # name: Run Selected Selenium Tests with SonarQube Scan
