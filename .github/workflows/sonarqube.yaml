@@ -1,4 +1,4 @@
-name: Install Docker and Run SonarQube
+name: Install Docker, Run SonarQube, and Expose URL
 
 on:
   workflow_dispatch:   # Trigger manually
@@ -8,22 +8,75 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Install Docker using the official script
+      # Step 1: Install Docker via official script
       - name: Install Docker via official script
         run: |
           curl -fsSL https://get.docker.com -o get-docker.sh
           sudo sh get-docker.sh
 
-      # Step 2: Run SonarQube Server in Docker
+      # Step 2: Install Ngrok (for exposing local service to the internet)
+      - name: Install ngrok
+        run: |
+          curl -s https://ngrok.com/download | tar xz
+          sudo mv ngrok /usr/local/bin
+
+      # Step 3: Run SonarQube Server in Docker
       - name: Run SonarQube Server
         run: |
           docker run -d --name sonarqube-server -p 9000:9000 sonarqube:10.6-community
 
-      # Step 3: Wait and check SonarQube health
+      # Step 4: Wait and check SonarQube health
       - name: Wait and Health Check
         run: |
           sleep 60
           curl -s http://localhost:9000 | grep -q "SonarQube"
+
+      # Step 5: Expose SonarQube using ngrok and get the public URL
+      - name: Expose SonarQube using ngrok
+        run: |
+          ngrok http 9000 &
+          sleep 5
+          ngrok_url=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+          echo "SonarQube is now accessible at $ngrok_url"
+          echo "SONARQUBE_URL=$ngrok_url" >> $GITHUB_ENV
+          
+      # Step 6: Output the public URL
+      - name: Output SonarQube URL
+        run: |
+          echo "SonarQube can be accessed at: ${{ env.SONARQUBE_URL }}"
+
+
+
+
+
+
+
+# name: Install Docker and Run SonarQube
+
+# on:
+#   workflow_dispatch:   # Trigger manually
+
+# jobs:
+#   setup-sonarqube:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       # Step 1: Install Docker using the official script
+#       - name: Install Docker via official script
+#         run: |
+#           curl -fsSL https://get.docker.com -o get-docker.sh
+#           sudo sh get-docker.sh
+
+#       # Step 2: Run SonarQube Server in Docker
+#       - name: Run SonarQube Server
+#         run: |
+#           docker run -d --name sonarqube-server -p 9000:9000 sonarqube:10.6-community
+
+#       # Step 3: Wait and check SonarQube health
+#       - name: Wait and Health Check
+#         run: |
+#           sleep 60
+#           curl -s http://localhost:9000 | grep -q "SonarQube"
 
 
 
