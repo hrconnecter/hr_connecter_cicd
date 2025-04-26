@@ -1,10 +1,7 @@
 name: Build and Analyze with SonarQube
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:  # manual trigger
+  workflow_dispatch:  # manual trigger only
 
 jobs:
   build:
@@ -23,7 +20,7 @@ jobs:
       - name: Build Project
         run: |
           echo "Building the project with Maven"
-          mvn clean install # This will generate the build artifact (e.g., JAR/WAR)
+          mvn clean install
 
   sonarqube-setup:
     needs: build
@@ -41,7 +38,6 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
-      # Output the SonarQube URL
       - name: SonarQube Dashboard URL
         run: |
           echo "SonarQube analysis completed."
