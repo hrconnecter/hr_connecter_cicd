@@ -1,284 +1,41 @@
-name: 🚀 sonar-testing
+name: SonarQube with ngrok
 
 on:
   workflow_dispatch:
 
 jobs:
-  sonarqube:
-    name: SonarQube Scan
+  setup-sonarqube:
     runs-on: ubuntu-latest
-    services:
-      sonarqube:
-        image: sonarqube:lts
-        ports:
-          - 9000:9000
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: 12
-
-      - name: Install dependencies
-        run: npm install --force
-
-      - name: Wait for SonarQube to be Ready
+      - name: Install Docker
         run: |
-          echo "Waiting for SonarQube to start..."
-          for i in {1..30}; do
-            if curl -s http://localhost:9000/api/system/health | grep -q '"status":"UP"'; then
-              echo "SonarQube is up!"
-              break
-            fi
-            echo "Waiting... ($i)"
-            sleep 5
-          done
+          curl -fsSL https://get.docker.com -o get-docker.sh
+          sudo sh get-docker.sh
 
-      - name: Install Sonar Scanner
+      - name: Start SonarQube
         run: |
-          curl -sSLo sonar-scanner-cli.zip \
-          https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip sonar-scanner-cli.zip
-          mv sonar-scanner-5.0.1.3006-linux sonar-scanner
-          export PATH=$PATH:$(pwd)/sonar-scanner/bin
+          docker run -d --name sonarqube -p 9000:9000 sonarqube:lts
 
-      - name: Run Sonar Scanner
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Wait for SonarQube to start
         run: |
-          ./sonar-scanner/bin/sonar-scanner \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=${{ env.SONAR_TOKEN }}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# name: Install Docker, Run SonarQube, and Expose URL
-
-# on:
-#   workflow_dispatch:   # Trigger manually
-
-# jobs:
-#   setup-sonarqube:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       # Step 1: Install Docker via official script
-#       - name: Install Docker via official script
-#         run: |
-#           curl -fsSL https://get.docker.com -o get-docker.sh
-#           sudo sh get-docker.sh
-
-#       # Step 2: Install ngrok (for exposing local service to the internet)
-#       - name: Install ngrok
-#         run: |
-#           wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
-#           unzip ngrok-stable-linux-amd64.zip
-#           sudo mv ngrok /usr/local/bin
-#           rm ngrok-stable-linux-amd64.zip
-
-#       # Step 3: Run SonarQube Server in Docker
-#       - name: Run SonarQube Server
-#         run: |
-#           docker run -d --name sonarqube-server -p 9000:9000 sonarqube:10.6-community
-
-#       # Step 4: Wait and check SonarQube health
-#       - name: Wait and Health Check
-#         run: |
-#           sleep 60
-#           curl -s http://localhost:9000 | grep -q "SonarQube"
-
-#       # Step 5: Expose SonarQube using ngrok and get the public URL
-#       - name: Expose SonarQube using ngrok
-#         run: |
-#           ngrok http 9000 &
-#           sleep 5
-#           ngrok_url=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-#           echo "SonarQube is now accessible at $ngrok_url"
-#           echo "SONARQUBE_URL=$ngrok_url" >> $GITHUB_ENV
-          
-#       # Step 6: Output the public URL
-#       - name: Output SonarQube URL
-#         run: |
-#           echo "SonarQube can be accessed at: ${{ env.SONARQUBE_URL }}"
-
-
-
-
-
-
-# name: Install Docker and Run SonarQube
-
-# on:
-#   workflow_dispatch:   # Trigger manually
-
-# jobs:
-#   setup-sonarqube:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       # Step 1: Install Docker using the official script
-#       - name: Install Docker via official script
-#         run: |
-#           curl -fsSL https://get.docker.com -o get-docker.sh
-#           sudo sh get-docker.sh
-
-#       # Step 2: Run SonarQube Server in Docker
-#       - name: Run SonarQube Server
-#         run: |
-#           docker run -d --name sonarqube-server -p 9000:9000 sonarqube:10.6-community
-
-#       # Step 3: Wait and check SonarQube health
-#       - name: Wait and Health Check
-#         run: |
-#           sleep 60
-#           curl -s http://localhost:9000 | grep -q "SonarQube"
-
-
-
-
-# name: Run Selected Selenium Tests with SonarQube Scan
-
-# on:
-#   workflow_dispatch:  # Manual trigger
-
-# jobs:
-#   build-and-scan:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v3
-
-#       - name: Set up Java
-#         uses: actions/setup-java@v3
-#         with:
-#           distribution: 'temurin'
-#           java-version: '17'
-# #
-#       - name: Build Project with Maven
-#         run: |
-#           echo "🔨 Building project with Maven"
-#           mvn clean install
-
-#       - name: Start SonarQube Server (Docker)
-#         run: |
-#           echo "🚀 Starting SonarQube in Docker"
-#           docker run -d --name sonarqube-custom -p 9000:9000 sonarqube:10.6-community
-
-#       - name: Wait for SonarQube to be ready
-#         run: |
-#           echo "⏳ Waiting for SonarQube to start..."
-#           for i in {1..30}; do
-#             if curl -s http://localhost:9000/api/system/health | grep -q '"status":"UP"'; then
-#               echo "✅ SonarQube is UP!"
-#               break
-#             fi
-#             sleep 5
-#           done
-
-#       - name: Install Sonar Scanner
-#         run: |
-#           echo "🔧 Installing SonarScanner"
-#           sudo apt-get update
-#           sudo apt-get install -y unzip
-#           curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-#           unzip sonar-scanner.zip
-#           sudo mv sonar-scanner-*/ /opt/sonar-scanner
-#           sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
-
-#       - name: Run Sonar Scanner
-#         env:
-#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # You should create this secret in GitHub repo settings
-#         run: |
-#           echo "🔍 Running SonarQube Scan"
-#           sonar-scanner \
-#             -Dsonar.projectKey=my-project \
-#             -Dsonar.sources=. \
-#             -Dsonar.host.url=http://localhost:9000 \
-#             -Dsonar.login=$SONAR_TOKEN
-
-#   selenium-testing:
-#     needs: build-and-scan
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v3
-
-#       - name: Set up Java
-#         uses: actions/setup-java@v3
-#         with:
-#           distribution: 'temurin'
-#           java-version: '17'
-
-#       - name: Install Google Chrome
-#         run: |
-#           sudo apt update
-#           sudo apt install -y google-chrome-stable || true
-
-#       - name: Check Chrome Version
-#         run: google-chrome --version
-
-#       - name: Run Selected Selenium Tests
-#         env:
-#           GITHUB_ACTIONS: true
-#         run: |
-#           echo "🚀 Running selected Selenium tests headlessly"
-#           CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
-#           mvn clean test -Dtest=basic.AdvanceSalary | tee selenium-test-output.txt
-
-#           echo "================ PARSING RESULTS ================="
-#           summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1 || echo "No test summary found.")
-#           echo "Test Summary: $summary_line"
-
-#           total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+' || echo 0)
-#           failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+' || echo 0)
-#           errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+' || echo 0)
-#           skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+' || echo 0)
-#           passed=$((total - failures - errors))
-
-#           if [ "$total" -eq 0 ]; then
-#             percent=0
-#           else
-#             percent=$((passed * 100 / total))
-#           fi
-
-#           echo "========== VALIDATION SUMMARY ==========" > combined-test-report.txt
-#           echo "📊 Total: $total, Passed: $passed, Failures: $failures, Errors: $errors, Skipped: $skipped, Passed %: $percent" >> combined-test-report.txt
-
-#           if [ "$percent" -ge 80 ]; then
-#             echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding." >> combined-test-report.txt
-#           else
-#             echo "❌ Test pass percentage ($percent%) is below threshold (80%). Failing workflow." >> combined-test-report.txt
-#             cat combined-test-report.txt
-#             exit 1
-#           fi
-
-
-
-
-
-
-
+          echo "Waiting for SonarQube to be healthy..."
+          sleep 60  # Give it time to boot
+
+      - name: Install ngrok
+        run: |
+          wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+          unzip ngrok-stable-linux-amd64.zip
+          sudo mv ngrok /usr/local/bin
+
+      - name: Start ngrok tunnel
+        run: |
+          ngrok http 9000 > /dev/null &
+          sleep 10
+          curl http://127.0.0.1:4040/api/tunnels > tunnels.json
+          cat tunnels.json
+          export URL=$(cat tunnels.json | jq -r '.tunnels[0].public_url')
+          echo "NGROK_URL=$URL" >> $GITHUB_ENV
+
+      - name: Output public URL
+        run: echo "Access SonarQube at: ${{ env.NGROK_URL }}"
