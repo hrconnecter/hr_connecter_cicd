@@ -50,30 +50,23 @@ jobs:
         run: |
           echo "Running tests headlessly"
           CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
-          mvn clean test -Dtest=essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement | tee selenium-test-output.txt
+          mvn clean test -Dtest=essential.LoginLogout,essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement | tee selenium-test-output.txt
           echo "================ PARSING RESULTS ================="
-          
-          # Capture the Maven output summary from the selenium-test-output.txt file
-          summary_line=$(grep -A 10 "Results:" selenium-test-output.txt | tail -n 20)
+          summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1 || echo "No test summary found.")
           echo "Test Summary: $summary_line"
-          
-          # Extract the total, failures, errors, and skipped values from the summary
+
           total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+' || echo 0)
           failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+' || echo 0)
           errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+' || echo 0)
           skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+' || echo 0)
-          
-          # Calculate passed tests based on total, failures, and errors
           passed=$((total - failures - errors))
           if [ "$total" -eq 0 ]; then
             percent=0
           else
             percent=$((passed * 100 / total))
           fi
-
           echo "========== VALIDATION SUMMARY ==========" > combined-test-report.txt
           echo "📊 Total: $total, Passed: $passed, Failures: $failures, Errors: $errors, Skipped: $skipped, Passed %: $percent" >> combined-test-report.txt
-
           if [ "$percent" -ge 80 ]; then
             echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding." >> combined-test-report.txt
           else
@@ -95,104 +88,3 @@ jobs:
         with:
           name: selenium-test-log
           path: selenium-test-output.txt
-
-
-
-
-
-
-
-
-
-
-
-# name: Run Selected Selenium Tests
-
-# on:
-#   workflow_dispatch:  # manual trigger only
-
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v3
-
-#       - name: Set up Java
-#         uses: actions/setup-java@v3
-#         with:
-#           distribution: 'temurin'
-#           java-version: '17'
-
-#       - name: Build Project
-#         run: |
-#           echo "Building the project with Maven"
-#           mvn clean install
-
-#   selenium-testing:
-#     needs: build
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v3
-
-#       - name: Set up Java
-#         uses: actions/setup-java@v3
-#         with:
-#           distribution: 'temurin'
-#           java-version: '17'
-
-#       - name: Install Chrome
-#         run: |
-#           sudo apt update
-#           sudo apt install -y google-chrome-stable || true
-
-#       - name: Print Chrome version
-#         run: google-chrome --version
-
-#       - name: Run Selected Selenium Tests in headless mode
-#         env:
-#           GITHUB_ACTIONS: true
-#         run: |
-#           echo "Running tests headlessly"
-#           CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
-#           mvn clean test -Dtest=essential.LoginLogout,essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement | tee selenium-test-output.txt
-#           echo "================ PARSING RESULTS ================="
-#           summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1 || echo "No test summary found.")
-#           echo "Test Summary: $summary_line"
-
-#           total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+' || echo 0)
-#           failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+' || echo 0)
-#           errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+' || echo 0)
-#           skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+' || echo 0)
-#           passed=$((total - failures - errors))
-#           if [ "$total" -eq 0 ]; then
-#             percent=0
-#           else
-#             percent=$((passed * 100 / total))
-#           fi
-#           echo "========== VALIDATION SUMMARY ==========" > combined-test-report.txt
-#           echo "📊 Total: $total, Passed: $passed, Failures: $failures, Errors: $errors, Skipped: $skipped, Passed %: $percent" >> combined-test-report.txt
-#           if [ "$percent" -ge 80 ]; then
-#             echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding." >> combined-test-report.txt
-#           else
-#             echo "❌ Test pass percentage ($percent%) is below threshold (80%). Failing workflow." >> combined-test-report.txt
-#             exit 1
-#           fi
-#           echo "" >> combined-test-report.txt
-
-#       - name: 📦 Upload validation summary
-#         if: always()
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: test-validation-summary
-#           path: combined-test-report.txt
-
-#       - name: 📦 Upload full Maven test log
-#         if: always()
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: selenium-test-log
-#           path: selenium-test-output.txt
