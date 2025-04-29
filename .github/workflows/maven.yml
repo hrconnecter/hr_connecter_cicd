@@ -50,7 +50,7 @@ jobs:
         run: |
           echo "Running tests headlessly"
           CHROME_ARGS="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
-          mvn clean test -Dtest=essential.AddDepartment,essential.EmployeeOnboarding,enterprise.ExpenseManagement | tee selenium-test-output.txt
+          mvn clean test -Dtest=essential.AddDepartment,enterprise.ExpenseManagement,essential.EmployeeOnboarding | tee selenium-test-output.txt
           echo "================ PARSING RESULTS ================="
           summary_line=$(grep "Tests run:" selenium-test-output.txt | tail -1 || echo "No test summary found.")
           echo "Test Summary: $summary_line"
