@@ -20,7 +20,7 @@ jobs:
       - name: Wait for SonarQube to start
         run: |
           echo "Waiting for SonarQube to be healthy..."
-          sleep 60  # Give it time to boot
+          sleep 60
 
       - name: Install ngrok
         run: |
@@ -28,14 +28,14 @@ jobs:
           unzip ngrok-stable-linux-amd64.zip
           sudo mv ngrok /usr/local/bin
 
-      - name: Start ngrok tunnel
+      - name: Start ngrok tunnel and get public URL
+        id: ngrok
         run: |
           ngrok http 9000 > /dev/null &
           sleep 10
-          curl http://127.0.0.1:4040/api/tunnels > tunnels.json
-          cat tunnels.json
-          export URL=$(cat tunnels.json | jq -r '.tunnels[0].public_url')
-          echo "NGROK_URL=$URL" >> $GITHUB_ENV
+          NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
 
-      - name: Output public URL
-        run: echo "Access SonarQube at: ${{ env.NGROK_URL }}"
+      - name: Output SonarQube Public URL
+        run: |
+          echo "Access SonarQube at: ${{ env.NGROK_URL }}"
