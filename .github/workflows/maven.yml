@@ -76,12 +76,14 @@ jobs:
           echo "" >> combined-test-report.txt
 
       - name: 📦 Upload validation summary
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-validation-summary
           path: combined-test-report.txt
 
       - name: 📦 Upload full Maven test log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: selenium-test-log
