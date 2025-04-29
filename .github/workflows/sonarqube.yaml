@@ -1,51 +1,127 @@
-name: Install Docker, Run SonarQube, and Expose URL
+name: 🚀 sonar-testing
 
 on:
-  workflow_dispatch:   # Trigger manually
+  workflow_dispatch:
 
 jobs:
-  setup-sonarqube:
+  sonarqube:
+    name: SonarQube Scan
     runs-on: ubuntu-latest
-
+    services:
+      sonarqube:
+        image: sonarqube:lts
+        ports:
+          - 9000:9000
     steps:
-      # Step 1: Install Docker via official script
-      - name: Install Docker via official script
-        run: |
-          curl -fsSL https://get.docker.com -o get-docker.sh
-          sudo sh get-docker.sh
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-      # Step 2: Install ngrok (for exposing local service to the internet)
-      - name: Install ngrok
-        run: |
-          wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
-          unzip ngrok-stable-linux-amd64.zip
-          sudo mv ngrok /usr/local/bin
-          rm ngrok-stable-linux-amd64.zip
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
 
-      # Step 3: Run SonarQube Server in Docker
-      - name: Run SonarQube Server
-        run: |
-          docker run -d --name sonarqube-server -p 9000:9000 sonarqube:10.6-community
+      - name: Install dependencies
+        run: npm install --force
 
-      # Step 4: Wait and check SonarQube health
-      - name: Wait and Health Check
+      - name: Wait for SonarQube to be Ready
         run: |
-          sleep 60
-          curl -s http://localhost:9000 | grep -q "SonarQube"
+          echo "Waiting for SonarQube to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:9000/api/system/health | grep -q '"status":"UP"'; then
+              echo "SonarQube is up!"
+              break
+            fi
+            echo "Waiting... ($i)"
+            sleep 5
+          done
 
-      # Step 5: Expose SonarQube using ngrok and get the public URL
-      - name: Expose SonarQube using ngrok
+      - name: Install Sonar Scanner
         run: |
-          ngrok http 9000 &
-          sleep 5
-          ngrok_url=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-          echo "SonarQube is now accessible at $ngrok_url"
-          echo "SONARQUBE_URL=$ngrok_url" >> $GITHUB_ENV
+          curl -sSLo sonar-scanner-cli.zip \
+          https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner-cli.zip
+          mv sonar-scanner-5.0.1.3006-linux sonar-scanner
+          export PATH=$PATH:$(pwd)/sonar-scanner/bin
+
+      - name: Run Sonar Scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./sonar-scanner/bin/sonar-scanner \
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.login=${{ env.SONAR_TOKEN }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# name: Install Docker, Run SonarQube, and Expose URL
+
+# on:
+#   workflow_dispatch:   # Trigger manually
+
+# jobs:
+#   setup-sonarqube:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       # Step 1: Install Docker via official script
+#       - name: Install Docker via official script
+#         run: |
+#           curl -fsSL https://get.docker.com -o get-docker.sh
+#           sudo sh get-docker.sh
+
+#       # Step 2: Install ngrok (for exposing local service to the internet)
+#       - name: Install ngrok
+#         run: |
+#           wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+#           unzip ngrok-stable-linux-amd64.zip
+#           sudo mv ngrok /usr/local/bin
+#           rm ngrok-stable-linux-amd64.zip
+
+#       # Step 3: Run SonarQube Server in Docker
+#       - name: Run SonarQube Server
+#         run: |
+#           docker run -d --name sonarqube-server -p 9000:9000 sonarqube:10.6-community
+
+#       # Step 4: Wait and check SonarQube health
+#       - name: Wait and Health Check
+#         run: |
+#           sleep 60
+#           curl -s http://localhost:9000 | grep -q "SonarQube"
+
+#       # Step 5: Expose SonarQube using ngrok and get the public URL
+#       - name: Expose SonarQube using ngrok
+#         run: |
+#           ngrok http 9000 &
+#           sleep 5
+#           ngrok_url=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+#           echo "SonarQube is now accessible at $ngrok_url"
+#           echo "SONARQUBE_URL=$ngrok_url" >> $GITHUB_ENV
           
-      # Step 6: Output the public URL
-      - name: Output SonarQube URL
-        run: |
-          echo "SonarQube can be accessed at: ${{ env.SONARQUBE_URL }}"
+#       # Step 6: Output the public URL
+#       - name: Output SonarQube URL
+#         run: |
+#           echo "SonarQube can be accessed at: ${{ env.SONARQUBE_URL }}"
 
 
 
