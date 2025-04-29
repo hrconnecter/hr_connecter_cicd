@@ -1,41 +1,113 @@
-name: SonarQube with ngrok
+name: 🚀 sonar-testing
 
 on:
   workflow_dispatch:
 
 jobs:
-  setup-sonarqube:
+  sonarqube:
+    name: SonarQube Scan
     runs-on: ubuntu-latest
-
+    services:
+      sonarqube:
+        image: sonarqube:lts
+        ports:
+          - 9000:9000
     steps:
-      - name: Install Docker
-        run: |
-          curl -fsSL https://get.docker.com -o get-docker.sh
-          sudo sh get-docker.sh
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-      - name: Start SonarQube
-        run: |
-          docker run -d --name sonarqube -p 9000:9000 sonarqube:lts
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
 
-      - name: Wait for SonarQube to start
-        run: |
-          echo "Waiting for SonarQube to be healthy..."
-          sleep 60
+      - name: Install dependencies
+        run: npm install --force
 
-      - name: Install ngrok
+      - name: Wait for SonarQube to be Ready
         run: |
-          wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
-          unzip ngrok-stable-linux-amd64.zip
-          sudo mv ngrok /usr/local/bin
+          for i in {1..30}; do
+            if curl -s http://localhost:9000/api/system/health | grep -q '"status":"UP"'; then
+              echo "SonarQube is UP"
+              break
+            fi
+            echo "Waiting for SonarQube..."
+            sleep 5
+          done
 
-      - name: Start ngrok tunnel and get public URL
-        id: ngrok
+      - name: Install Sonar Scanner
         run: |
-          ngrok http 9000 > /dev/null &
-          sleep 10
-          NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
+          curl -sSLo sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner-cli.zip
+          mv sonar-scanner-5.0.1.3006-linux sonar-scanner
 
-      - name: Output SonarQube Public URL
+      - name: Run Sonar Scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          echo "Access SonarQube at: ${{ env.NGROK_URL }}"
+          ./sonar-scanner/bin/sonar-scanner \
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.login=$SONAR_TOKEN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# name: SonarQube with ngrok
+
+# on:
+#   workflow_dispatch:
+
+# jobs:
+#   setup-sonarqube:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Install Docker
+#         run: |
+#           curl -fsSL https://get.docker.com -o get-docker.sh
+#           sudo sh get-docker.sh
+
+#       - name: Start SonarQube
+#         run: |
+#           docker run -d --name sonarqube -p 9000:9000 sonarqube:lts
+
+#       - name: Wait for SonarQube to start
+#         run: |
+#           echo "Waiting for SonarQube to be healthy..."
+#           sleep 60
+
+#       - name: Install ngrok
+#         run: |
+#           wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+#           unzip ngrok-stable-linux-amd64.zip
+#           sudo mv ngrok /usr/local/bin
+
+#       - name: Start ngrok tunnel and get public URL
+#         id: ngrok
+#         run: |
+#           ngrok http 9000 > /dev/null &
+#           sleep 10
+#           NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+#           echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
+
+#       - name: Output SonarQube Public URL
+#         run: |
+#           echo "Access SonarQube at: ${{ env.NGROK_URL }}"
