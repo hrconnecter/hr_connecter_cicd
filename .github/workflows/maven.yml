@@ -32,6 +32,33 @@ jobs:
                flag {print}
                /^✅|❌/ {print; flag=0}' full-test-output.txt > combined-test-report.txt
 
+          echo "================ PARSING RESULTS ================="
+          summary_line=$(grep "Tests run:" full-test-output.txt | tail -1 || echo "No test summary found.")
+          echo "Test Summary: $summary_line"
+
+          total=$(echo "$summary_line" | grep -oP 'Tests run: \K[0-9]+' || echo 0)
+          failures=$(echo "$summary_line" | grep -oP 'Failures: \K[0-9]+' || echo 0)
+          errors=$(echo "$summary_line" | grep -oP 'Errors: \K[0-9]+' || echo 0)
+          skipped=$(echo "$summary_line" | grep -oP 'Skipped: \K[0-9]+' || echo 0)
+          passed=$((total - failures - errors))
+          if [ "$total" -eq 0 ]; then
+            percent=0
+          else
+            percent=$((passed * 100 / total))
+          fi
+
+          {
+            echo ""
+            echo "========== VALIDATION SUMMARY =========="
+            echo "📊 Total: $total, Passed: $passed, Failures: $failures, Errors: $errors, Skipped: $skipped, Passed %: $percent"
+            if [ "$percent" -ge 80 ]; then
+              echo "✅ Test pass percentage ($percent%) is acceptable. Proceeding."
+            else
+              echo "❌ Test pass percentage ($percent%) is below threshold (80%). Failing workflow."
+              exit 1
+            fi
+          } >> combined-test-report.txt
+
       - name: 📦 Upload validation summary
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,6 +83,7 @@ jobs:
             Regards,  
             GitHub CI/CD Bot
           attachments: combined-test-report.txt
+
 
 
 
