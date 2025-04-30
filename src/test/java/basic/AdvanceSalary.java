@@ -10,10 +10,6 @@ import org.openqa.selenium.WebDriver;
 
 import org.openqa.selenium.WebElement;
 
-import org.openqa.selenium.chrome.ChromeDriver;
-
-import org.openqa.selenium.edge.EdgeDriver;
-
 import org.testng.annotations.AfterClass;
 
 import org.testng.annotations.BeforeClass;
@@ -119,7 +115,7 @@ public class AdvanceSalary
 
 	    driver.findElement(By.xpath("//button[text()='Login']")).click();
 
-	    Thread.sleep(1000);
+	    Thread.sleep(2000);
 
 	}
 
@@ -145,7 +141,7 @@ public class AdvanceSalary
 
 	{
 
-		Thread.sleep(1000);
+		Thread.sleep(3000);
 
 		driver.findElement(By.xpath("(//*[local-name()='svg' and @data-testid='MenuIcon'])")).click();
 

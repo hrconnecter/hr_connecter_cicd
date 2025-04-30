@@ -80,9 +80,9 @@ public class EmployeeOnboarding {
         selectDropdown("(//input[@role='combobox'])[4]", "manager");
         selectDropdown("(//input[@role='combobox'])[5]", "001");
         selectDropdown("(//input[@role='combobox'])[6]", "employee");
-        selectDropdown("(//input[@role='combobox'])[9]", "lake");
+        selectDropdown("(//input[@role='combobox'])[8]", "lake");
+        selectDropdown("(//input[@role='combobox'])[9]", "full");
         selectDropdown("(//input[@role='combobox'])[10]", "full");
-        selectDropdown("(//input[@role='combobox'])[11]", "full");
         driver.findElement(By.xpath("//button[text()='Next']")).click();
         Thread.sleep(3000);
         System.out.println("Second page completed");
