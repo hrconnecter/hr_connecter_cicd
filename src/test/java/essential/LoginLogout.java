@@ -24,17 +24,11 @@ public class LoginLogout {
     public void setup() {
 
         driver = BaseDriverSetup.getDriver();
-
         driver.manage().window().maximize();
-
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(25));
-
         driver.get("https://app.aegishrms.com/sign-in");
-
         System.out.println("=========================================================");
-
         System.out.println("▶️ LOGIN AND LOGOUT");
-
     }
  
     @Test
@@ -42,35 +36,21 @@ public class LoginLogout {
     public void adminLoginLogout() {
 
         try {
-
             login("automationscripts@gmail.com", "Pass@123");
-
             System.out.println("Admin Login done successfully");
- 
+            
             // Navigate to Organisation
-
             driver.findElement(By.xpath("//button[text()='Go To Organisation']")).click();
-
             driver.findElement(By.xpath("(//button[text()='Setup'])[1]")).click();
- 
             logout();
-
             System.out.println("Admin Logout done successfully");
- 
+            
             // Final success confirmation
-
             System.out.println("=========================================================");
-
             System.out.println("✅ LOGIN AND LOGOUT- PASSED");
- 
         } catch (Exception e) {
-
             System.out.println("❌ LOGIN AND LOGOUT- FAILED");
-
-//            System.out.println("🔍 Error Message: " + e.getMessage());
-
             e.printStackTrace();  // For detailed stack trace
-
             Assert.fail("Test failed due to exception: " + e.getMessage());
 
         }

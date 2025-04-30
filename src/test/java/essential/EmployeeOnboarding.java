@@ -26,6 +26,7 @@ public class EmployeeOnboarding {
 
     @Test
     public void employeeOnboardingWorkflow() throws InterruptedException {
+    	try {
         login();
         navigateToOnboardingPage();
         fillFirstPageDetails();
@@ -33,6 +34,15 @@ public class EmployeeOnboarding {
         completeThirdPage();
         submitAndDeleteEmployee();
         logout();
+        
+        System.out.println("=========================================================");
+        System.out.println("✅ EMPLOYEE ONBOARDING- PASSED");
+    } catch (Exception e) {
+    	System.out.println("❌ EMPLOYEE ONBOARDING- FAILED");
+        System.out.println("🔍 Error Message: " + e.getMessage());
+        e.printStackTrace();
+
+    }
     }
 
     private void login() throws InterruptedException {

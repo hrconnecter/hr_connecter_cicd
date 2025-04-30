@@ -7,6 +7,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -42,6 +43,8 @@ public class Form16 {
         	System.out.println("❌ FORM 16 DOWNLOAD- FAILED");
             System.out.println("🔍 Error Message: " + e.getMessage());
             e.printStackTrace();
+            Assert.fail("Test failed due to exception: " + e.getMessage());
+
         }
     }
     
