@@ -1,49 +1,3 @@
-name: Run Selected Selenium Tests
-
-on:
-  workflow_dispatch:  # manual trigger only
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Build Project
-        run: |
-          echo "Building the project with Maven"
-          mvn clean install
-
-  selenium-testing:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Install Chrome
-        run: |
-          sudo apt update
-          sudo apt install -y google-chrome-stable || true
-
-      - name: Print Chrome version
-        run: google-chrome --version
-
       - name: Run Selected Selenium Tests in headless mode
         env:
           GITHUB_ACTIONS: true
@@ -76,12 +30,14 @@ jobs:
           echo "" >> combined-test-report.txt
 
       - name: 📦 Upload validation summary
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-validation-summary
           path: combined-test-report.txt
 
       - name: 📦 Upload full Maven test log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: selenium-test-log
