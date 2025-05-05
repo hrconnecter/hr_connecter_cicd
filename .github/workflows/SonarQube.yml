@@ -1,0 +1,20 @@
+name: SonarQube Integration
+
+on:
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  sonarqube:
+    name: SonarQube Integration
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Full clone for better Sonar analysis
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}     # Add this in GitHub repo secrets
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}  # e.g., https://sq.bswlog.co.in
