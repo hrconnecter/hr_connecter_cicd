@@ -7,11 +7,11 @@ jobs:
   run-build:
     uses: ./.github/workflows/build.yaml
 
-  run-maven:
-    needs: run-build
-    uses: ./.github/workflows/maven.yml
-
   run-sonarqube:
-    needs: run-maven
+    needs: run-build
     uses: ./.github/workflows/SonarQube.yml
+
+  run-selenium:
+    needs: run-sonarqube
+    uses: ./.github/workflows/maven.yml
 
