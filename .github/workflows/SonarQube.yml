@@ -1,20 +1,29 @@
-name: SonarQube Integration
+name: SonarQube Scan
 
 on:
-  workflow_call:  # Allows manual trigger from GitHub Actions UI
+  push:
+    branches:
+      - main
 
 jobs:
   sonarqube:
-    name: SonarQube Integration
+    name: Run SonarQube Scan
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Full clone for better Sonar analysis
+          fetch-depth: 0  # Required for full history scan
 
-      - name: SonarQube Scan
+      - name: Run SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}     # Add this in GitHub repo secrets
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}  # e.g., https://sq.bswlog.co.in
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # Optional: Fail job if Quality Gate fails
+      # - name: Check Quality Gate
+      #   uses: sonarsource/sonarqube-quality-gate-action@master
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
