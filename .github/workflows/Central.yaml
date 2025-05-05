@@ -10,3 +10,8 @@ jobs:
   run-maven:
     needs: run-build
     uses: ./.github/workflows/maven.yml
+
+  run-sonarqube:
+    needs: run-maven
+    uses: ./.github/workflows/SonarQube.yml
+
