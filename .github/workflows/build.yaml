@@ -1,7 +1,7 @@
 name: Node.js CI Manual Build
 
 on:
-  workflow_dispatch:  # Enables manual trigger from GitHub UI
+  workflow_call  # Enables manual trigger from GitHub UI
 
 jobs:
   build:
