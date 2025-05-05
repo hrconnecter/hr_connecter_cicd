@@ -1,0 +1,12 @@
+name: Central Workflow
+
+on:
+  workflow_dispatch:  # allows manual trigger from GitHub Actions UI
+
+jobs:
+  run-build:
+    uses: ./.github/workflows/build.yaml
+
+  run-maven:
+    needs: run-build
+    uses: ./.github/workflows/maven.yml
