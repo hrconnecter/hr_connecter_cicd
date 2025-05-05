@@ -30,7 +30,7 @@ jobs:
           echo "================ EXTRACTING CUSTOM TEST RESULTS ================="
           awk '/^={20,}/ {flag=1; print; next}
                flag {print}
-               /^✅|❌/ {print; flag=0}' full-test-output.txt > combined-test-report.txt
+               /^✅|❌/ {print; flag=0}' full-test-output.txt > Selenium-test-report.txt
 
           echo "================ PARSING RESULTS ================="
           summary_line=$(grep "Tests run:" full-test-output.txt | tail -1 || echo "No test summary found.")
