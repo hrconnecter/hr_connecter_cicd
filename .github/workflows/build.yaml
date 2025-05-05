@@ -1,10 +1,7 @@
 name: 🚀 Build and Deploy
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:
@@ -25,7 +22,7 @@ jobs:
       - name: 🏗️ Build
         run: |
           echo "${{ secrets.PROD_ENV_FILE }}" | base64 --decode > .env
-          # Uncomment below if you want to check build inputs (avoid logging secrets)
+          # Avoid printing secrets
           # head .env
           npm run build
 
@@ -49,4 +46,4 @@ jobs:
       - name: 🧪 Test artifact download
         run: |
           ls -R
-          # cat .env  # ❌ Avoid logging secrets in CI logs
+          # cat .env  # ❌ Don't expose secrets
