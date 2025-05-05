@@ -1,7 +1,7 @@
 name: SonarQube Integration
 
 on:
-  workflow_dispatch:  # Allows manual trigger from GitHub Actions UI
+  workflow_call:  # Allows manual trigger from GitHub Actions UI
 
 jobs:
   sonarqube:
