@@ -57,14 +57,14 @@ jobs:
               echo "❌ Test pass percentage ($percent%) is below threshold (80%). Failing workflow."
               exit 1
             fi
-          } >> combined-test-report.txt
+          } >> selenium-test-report
 
       - name: 📦 Upload validation summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-validation-summary
-          path: combined-test-report.txt
+          path: selenium-test-report
 
       - name: 📧 Send email with test report
         if: always()
@@ -82,4 +82,4 @@ jobs:
             Please find attached the latest Selenium test summary report from GitHub Actions.
             Regards,  
             GitHub CI/CD Bot
-          attachments: combined-test-report.txt
+          attachments: selenium-test-report
